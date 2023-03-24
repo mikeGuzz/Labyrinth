@@ -25,6 +25,7 @@ namespace Labyrinth
                 new Rectangle(200, 100, 30, 120)
             };
 
+
             timer1.Interval = 20;
             timer1.Start();
         }
