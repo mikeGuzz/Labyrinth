@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -33,8 +34,8 @@ namespace Labyrinth
             }
         }
 
-        private List<Collision> collisions;
-        private List<Collision> finishCollisions;
+        private readonly List<Collision> collisions;
+        private readonly List<Collision> finishCollisions;
         private Collision? startCollision, endCollision;
         private Collision? bonusCollision;
         private GameState gameState;
@@ -49,7 +50,7 @@ namespace Labyrinth
         private TimeSpan time;
         private TimeSpan elapsedTime;
 
-        private Order order = new Order();
+        private readonly Order order;
 
         public Form1()
         {
@@ -62,7 +63,7 @@ namespace Labyrinth
                     using (Stream s = File.OpenRead(orderFileName))
                     {
                         var serializer = new XmlSerializer(typeof(Order));
-                        if(serializer.Deserialize(s) is Order order)
+                        if (serializer.Deserialize(s) is Order order)
                         {
                             this.order = order;
                         }
@@ -70,7 +71,7 @@ namespace Labyrinth
                         {
                             s.Close();
                             File.Delete(orderFileName);
-                        } 
+                        }
                     }
                 }
                 catch
@@ -78,6 +79,8 @@ namespace Labyrinth
                     File.Delete(orderFileName);
                 }
             }
+
+            order ??= new Order();
             UpdateResultLabels();
 
             collisions = new List<Collision>()
@@ -196,6 +199,7 @@ namespace Labyrinth
 
         private void ResetGame()
         {
+            button1.Enabled = mode_comboBox.Enabled = true;
             elapsedTime = TimeSpan.Zero;
             button1.Text = "Start";
             gameState = GameState.None;
@@ -403,6 +407,7 @@ namespace Labyrinth
 
         private void StartFirstPart()
         {
+            button1.Enabled = mode_comboBox.Enabled = false;
             gameState = GameState.FirstPart;
             switch (gameMode)
             {
@@ -513,13 +518,13 @@ namespace Labyrinth
                     break;
                 case GameState.SecondPart:
                     if (startCollision != null && startCollision.IsHit(e.Location))
-                        WinGame("You win!");
+                        WinGame($"You have successfully completed this mini-game in {elapsedTime.TotalSeconds} seconds!");
                     break;
             }
 
             if ((gameState == GameState.SecondPart || gameState == GameState.FirstPart) && collisions.IsHit(e.Location))
             {
-                GameOver("Collide");
+                GameOver("You've hit a wall! Be careful next time.");
             }
             pictureBox1.Invalidate();
         }
@@ -580,10 +585,10 @@ namespace Labyrinth
                         StartFirstPart();
                         break;
                     case GameState.FirstPart:
-                        GameOver("End of time");
+                        GameOver("The time to complete the first part of the mini-game is up.");
                         break;
                     case GameState.SecondPart:
-                        GameOver("End of time");
+                        GameOver("The time to complete the second part of the mini-game is up.");
                         break;
                 }
                 return;
